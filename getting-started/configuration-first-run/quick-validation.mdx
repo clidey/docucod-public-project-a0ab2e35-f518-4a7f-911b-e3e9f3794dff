@@ -3,4 +3,144 @@ title: "Quick Validation Steps"
 description: "Guides users to validate successful installation—such as verifying library output and ensuring demo correctness. Offers tips for checking core behaviors and where to look for confirmation of a working system."
 ---
 
-*This page will automatically be generated from the codebase*
+# Quick Validation Steps
+
+This page guides you through validating that your BTree installation and demo are working correctly. After building and running the demo program, you will verify the output, check for expected behaviors, and understand what confirms a successful setup.
+
+---
+
+## 1. Run the Demo Script
+
+The quickest way to validate your build is by running the provided demo script, which automates running the BTree test with a randomized input and captures output for review.
+
+### Action Steps
+
+1. Open a terminal and navigate to the `btest` directory:
+   ```bash
+   cd btest
+   ```
+2. Run the demo helper script:
+   ```bash
+   ./go_btest.sh
+   ```
+3. The script executes `./btest` with a random number seed and saves output to `./out.txt`.
+4. When prompted:
+   - Press `Y` or `y` to view the output file directly.
+   - Press `N` or `n` to exit.
+
+### Outcome
+
+Viewing the output file should display detailed logs of operations including insertion, traversal, search, and deletion operations within the BTree demo.
+
+<Tip>
+Use the output in `out.txt` as your main source of confirmation that the demo ran correctly. It shows callback invocations, comparison results, and tree walking logs.
+</Tip>
+
+---
+
+## 2. Verify Core Behaviors in the Output
+
+Your primary goal is to confirm that the demo:
+
+- Initializes the BTree with configured parameters
+- Inserts unique data objects
+- Walks/traverses the tree displaying a sorted listing
+- Performs deletions and verifies removal correctness
+
+### What to Look For
+
+- Clear logs stating the beginning of each phase like:
+  - `---| walk tree |---`
+  - `---| begin delete |---`
+  - `---| begin search after delete |---`
+- Callback prints showing comparisons:
+  - `o_cmp_cb` and `k_cmp_cb` function logs indicating data comparisons
+- No unexpected errors or empty outputs
+
+<Tip>
+Because `printf` calls are embedded in the assembly code for demonstration, logs include detailed diagnostic messages. This is expected during validation and shows your BTree functions are executing.
+</Tip>
+
+---
+
+## 3. Confirm Demo Parameters
+
+Check your demo configuration in `btest/main.h` for these parameters you can customize:
+
+```c
+#define DATA_COUNT    128
+#define DELETE_COUNT  0
+```
+
+- **DATA_COUNT** governs how many items the tree will insert.
+- **DELETE_COUNT** controls how many items are removed during the demo.
+
+Modify these with caution, ensuring `DELETE_COUNT` does not exceed `DATA_COUNT`.
+
+---
+
+## 4. Understand What Successful Validation Looks Like
+
+When the demo runs successfully:
+
+- The output shows a structured sequence of insertions and tree walking logs.
+- Insert and search callbacks report comparison values.
+- Data objects displayed during the walk are ordered by their key values (doubles).
+- If deletion is enabled, subsequent searches after deletion show that removed keys are not found.
+
+<Check>
+A complete walk log and absence of errors or unexpected empty outputs confirm your BTree implementation and demo are functioning correctly.
+</Check>
+
+---
+
+## 5. Troubleshooting Quick Checks
+
+If you encounter issues during validation:
+
+- Verify that all shared libraries (`libbtree.so` and `libutil.so`) exist and are accessible.
+- Confirm you ran the build script successfully without errors (`btree_make.sh`).
+- Make sure your environment is Linux x86_64 with required tools.
+- Rerun `./go_btest.sh` and confirm output generation.
+
+<AccordionGroup title="Common Validation Issues and Fixes">
+<Accordion title="No output displayed after running demo">
+Check if `./btest` is executable and located in the `btest` directory. Also, verify permissions using `ls -l btest` and set them with `chmod +x btest` if necessary.
+</Accordion>
+<Accordion title="Unexpected errors in output">
+Review the build logs for errors and confirm the shared libraries were correctly built without warnings or failures.
+</Accordion>
+<Accordion title="Output file `out.txt` not found">
+Ensure that the `./go_btest.sh` script has permission to write to the directory and that disk space is sufficient.
+</Accordion>
+</AccordionGroup>
+
+---
+
+## 6. Next Steps
+
+Having confirmed your initial setup, you can explore further:
+
+- Customize demo parameters in `btest/main.h` to test various behaviors.
+- Dive deeper into the [Using the BTree C Interface](/guides/core-workflows/using-btree-c-interface) to integrate into your own projects.
+- Review [Compiling and Running the Demo](/guides/core-workflows/compiling-running-demo) for detailed build insights.
+
+<Tip>
+Keep this quick validation process handy after any build or configuration change to verify system health fast.
+</Tip>
+
+---
+
+## Reference Links
+
+- [Building & Running the Demo](/overview/architecture-quickstart/quickstart-demo)
+- [Configuring the Demo Program](/getting-started/configuration-first-run/demo-configuration)
+- [Running the Demo](/getting-started/configuration-first-run/running-the-demo)
+- [Troubleshooting Common Setup Issues](/getting-started/troubleshooting/troubleshooting-setup)
+
+---
+
+This page completes the critical step of verifying your BTree library and demo are functioning as intended after installation and initial run.
+
+<Source url="https://github.com/KatoKode/BTree" paths={[{"path": "btest/go_btest.sh", "range": "1-26"}]} />
+<Source url="https://github.com/KatoKode/BTree" paths={[{"path": "btest/main.c", "range": "1-199"}]} />
