@@ -3,4 +3,132 @@ title: "Key Features & Capabilities"
 description: "A concise summary of the main features, such as C interoperability, demo program, and customizability. Highlights the benefits of a shared library design and efficient Assembly internals for speed-critical applications."
 ---
 
-*This page will automatically be generated from the codebase*
+# Key Features & Capabilities
+
+Discover the core strengths of the BTree Project's implementation, designed to empower Linux developers with a blending of blazing-fast Assembly internals and seamless C interoperability. This page concisely summarizes the essential features that make this BTree implementation a compelling choice for performance-critical applications.
+
+---
+
+## Seamless C Interoperability with Assembly Performance
+
+At its heart, this BTree is a finely tuned shared library implemented in 64-bit Assembly language. Despite the low-level optimization, the entire system exposes a clean, user-friendly C interface accessible to any C developer on Linux.
+
+- **Direct C API:** The BTree functions are easily callable from standard C code, allowing integration without complexity.
+- **Callback Flexibility:** Users supply their own comparison, key extraction, deletion, and traversal callbacks in C, offering full control over the stored object behavior.
+- **Shared Library Design:** Distributed as a `.so` shared library, enabling effortless linking and dynamic usage in diverse projects.
+
+Imagine writing your own data structures and simply providing the logic to compare and handle your objects — the BTree manages the intricate balancing and storage efficiently in the background.
+
+
+## Efficient Assembly Internals for Speed-Critical Applications
+
+The entire BTree algorithm runs in highly optimized x86_64 Assembly, tuned for maximum speed:
+
+- **Core Tree Operations:** Insert, remove, search, and traversal are implemented with careful memory management and minimal overhead.
+- **Internal Node Management:** Operations such as node splitting, filling, merging, and key borrowing from siblings ensure the BTree remains balanced with minimal latency.
+- **Memory Operations:** Leveraging `memmove64` and tailored internal mechanisms to maximize data movement efficiency.
+
+Through this design, developers achieve the speed of native Assembly code while maintaining the usability and flexibility of C. It's ideal for applications where data indexing and retrieval times make a critical difference.
+
+
+## Demo Program Included for Hands-On Exploration
+
+Alongside the core library, the project provides a comprehensive demo program demonstrating typical BTree usage:
+
+- **Configurable Dataset:** Easily adjust parameters like `DATA_COUNT` and `DELETE_COUNT` to test various insertion and deletion scenarios.
+- **Randomized Data:** The demo generates unique numeric keys and associated string data, showcasing the BTree's handling of arbitrary datasets.
+- **Stepwise Operations:** Outputs clear logs during insertions, deletions, tree walking, and search validations.
+
+This serves as both a learning tool and a testbed — you can modify the demo's parameters and callbacks to reflect your data structures and logic without delving into Assembly.
+
+
+## Customizable Callbacks for Object Management
+
+The BTree's design puts you in control, letting you define how objects are handled:
+
+- **Object Comparison Callback (`o_cmp_cb`):** Determines ordering between objects for insertion.
+- **Key Comparison Callback (`k_cmp_cb`):** Enables efficient searching based on keys extracted from objects.
+- **Object Deletion Callback (`o_del_cb`):** Hook to perform cleanup or logging when an object is removed.
+- **Key Extraction Callback (`k_get_cb`):** Extracts the key from an object to enable BTree operations.
+
+These callbacks allow the BTree to be data-agnostic and adaptable to your specific needs, whether your objects are simple numeric values or complex structures.
+
+
+## Robust Core Operations Exposed
+
+The shared library exposes a suite of core operations encapsulated behind simple function calls:
+
+- **Initialization & Termination:** Prepare new trees with customizable minimum degree and object sizes, and cleanly tear down trees releasing all allocated memory.
+- **Insertion:** Add new objects while automatically managing node splits to keep tree balance.
+- **Removal:** Delete objects by key with full support for complex underflow cases through merging and borrowing strategies.
+- **Search:** Locate objects by key with optional buffered result copying.
+- **Traversal:** Walk the entire tree invoking your callback on each object.
+
+Each function works in harmony with the internal Assembly logic to deliver consistent, predictable performance.
+
+
+## Real-World Example: Using the Demo's Data Structure
+
+Consider the bundled demo data type, which stores a double precision floating-point number and a formatted string representation. By defining how to compare these objects and extract keys (the floating-point value), the demo illustrates the full lifecycle of insertions and deletions with live output.
+
+This scenario mimics practical uses where numeric indices and formatted labels need to be stored and retrieved quickly.
+
+
+## Practical Tips & Best Practices
+
+- Always implement reliable comparison callbacks to ensure proper data ordering and search accuracy.
+- When modifying the demo or integrating into your project, adjust the `mindeg` parameter to balance node size vs. depth, based on your expected dataset size and lookup patterns.
+- Use the deletion callback to properly manage resources if your stored objects include dynamically allocated elements.
+- Run the demo with various `DATA_COUNT` and `DELETE_COUNT` values to understand insertion and removal impacts.
+
+
+## Troubleshooting Common Issues
+
+- **Incorrect Comparison Logic:** May lead to failed insertions or improper tree structure. Ensure callbacks strictly follow three-way comparison semantics (-1, 0, +1).
+- **Memory Leaks:** Implement the deletion callback carefully to free resources attached to objects.
+- **Demo Build Failures:** Confirm you have NASM, GCC, and Make installed and that you're operating on a Linux x86_64 system.
+
+
+## Sample Function Call Snippet
+
+```c
+// Initialize BTree with minimum degree, object size, and callbacks
+b_tree_t *tree = b_tree_alloc();
+b_tree_init(tree, 15, sizeof(data_t), o_cmp_cb, k_cmp_cb, o_del_cb, k_get_cb);
+
+// Insert an object
+data_t myData = {123.456, "123.456"};
+b_insert(tree, &myData);
+
+// Search the tree
+data_t result;
+if (b_search(tree->root, &(myData.d), &result) != NULL) {
+    // Found object
+    printf("Found: %s\n", result.s);
+}
+
+// Delete the object
+b_remove(tree, &(myData.d));
+
+// Terminate tree
+b_tree_term(tree);
+b_tree_free(tree);
+```
+
+
+---
+
+Explore how these features work in harmony to give you a high-performance, customizable BTree tailored for Linux C applications requiring razor-sharp speed and full control.
+
+
+---
+
+[Back to What is the BTree Project?](./product-summary)
+
+[Next: Core Concepts & Terminology](./terminology)
+
+[See: Using the BTree C Interface](../../guides/core-workflows/using-btree-c-interface)
+
+[Visit GitHub Repo](https://github.com/KatoKode/BTree)
+
+---
