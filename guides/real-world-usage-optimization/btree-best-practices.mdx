@@ -1,0 +1,252 @@
+---
+title: "BTree Best Practices and Patterns"
+description: "Outlines recommended approaches for using the BTree efficiently and safely. Topics include managing memory, designing callback functions, handling corner cases in tree operations, and avoiding common pitfalls encountered in the demo or custom applications."
+---
+
+# BTree Best Practices and Patterns
+
+This guide outlines recommended approaches for using the BTree efficiently and safely. It covers practical advice on managing memory, designing and implementing callback functions, handling corner cases during tree operations such as insertions and deletions, and avoiding common pitfalls encountered both in the included demo and custom applications.
+
+---
+
+## 1. Getting Ready for Success
+
+### Understanding the Core API and Callbacks
+The BTree project exposes a C interface centered around:
+
+- Initializing the tree with `b_tree_init`
+- Inserting objects using `b_insert`
+- Searching via `b_search`
+- Removing objects with `b_remove`
+- Walking/traversing with `b_walk`
+- Terminating and cleaning using `b_tree_term`
+
+These operations rely heavily on user-supplied callback functions:
+
+- **Object Compare (`o_cmp_cb`)**: For ordering items during insert operations.
+- **Key Compare (`k_cmp_cb`)**: For searching or deletion by key.
+- **Object Delete (`o_del_cb`)**: To properly release resources upon object deletion.
+- **Key Get (`k_get_cb`)**: To obtain the key value from objects.
+
+Understanding these callbacks and providing robust implementations are foundational to safe and efficient usage.
+
+### Memory Management Basics
+
+The BTree library internally allocates memory for nodes and their contents through standard C allocation functions (`calloc` and `free`). However, your responsibility is to:
+
+- Ensure that objects inserted into the tree are fully initialized and occupy a contiguous memory block matching the declared size.
+- Implement `o_del_cb` to release any additional memory or resources held by objects beyond the BTree’s raw memory.
+- After completing tree operations, call `b_tree_term` to clean up the entire tree and prevent leaks.
+
+<Tip>
+Always pair your `b_tree_init` with a corresponding call to `b_tree_term` to guarantee full memory cleanup.
+</Tip>
+
+<Tip>
+Avoid modifying tree nodes or objects directly outside the public API to prevent corruption.
+</Tip>
+
+---
+
+## 2. Designing Effective Callback Functions
+
+Your callbacks define the BTree’s behavior. Follow these best practices:
+
+### Object Compare Callback (`o_cmp_cb`)
+- Must implement a total ordering between two objects.
+- Return `-1` if the first object < second, `1` if greater, and `0` if equal.
+- Avoid side effects or long-running computations in this callback.
+
+### Key Compare Callback (`k_cmp_cb`)
+- Compares a lookup key against an object.
+- Follow the same return semantics as `o_cmp_cb`.
+- Keep logic consistent with the object compare callback to maintain proper ordering.
+
+### Object Delete Callback (`o_del_cb`)
+- Called whenever an object is removed.
+- Use this callback to free dynamically allocated memory inside object fields.
+- Must be reentrant and defensive (handle null pointers gracefully).
+
+### Key Get Callback (`k_get_cb`)
+- Extract the unique key from an object.
+- Should return a pointer to the key data within the object.
+
+<Note>
+The demo uses `data_t` structs with a double key and string data for callbacks. You can adapt these concepts to your data structures.
+</Note>
+
+---
+
+## 3. Safe Tree Operations: Insert, Delete, Search, and Walk
+
+The BTree supports full functionality, but careful handling ensures stability.
+
+### Insertions
+- Insertions use the `b_insert` function.
+- The library handles splitting nodes if full.
+- If the tree is empty, the root node is created automatically.
+- Duplicate keys are not rejected automatically - your callback determines ordering and equality.
+
+<Warning>
+Avoid inserting objects that have mutable keys or change in a way that breaks the tree ordering post-insertion.
+</Warning>
+
+### Deletions
+- Use `b_remove` with the key to delete.
+- The BTree will rebalance automatically, borrowing or merging nodes as needed.
+- Deletion includes multiple corner cases handled internally:
+  - Removing from leaves.
+  - Removing from non-leaf nodes by replacing with predecessor or successor.
+  - Borrowing keys from siblings or merging children if underflow occurs.
+
+<Warning>
+Be cautious with `DELETE_COUNT` in the demo; the library does not validate it against existing data count.
+</Warning>
+
+### Searching
+- Search with `b_search` by providing a root node, key, and object buffer.
+- Returns a pointer to the buffer if found, or NULL if missing.
+- Use `k_cmp_cb` callback for comparison.
+
+### Tree Walks
+- Use `b_walk` to traverse all objects in key order.
+- Supply a `walk_cb` to process each object.
+- The demo example demonstrates a `walk_cb` printing all objects with throttling via `sched_yield`.
+
+---
+
+## 4. Tips for Managing Memory and Performance
+
+- **Memory Footprint**: The `mindeg` (minimum degree) governs node size. Larger values mean fewer nodes but bigger memory blocks. Adjust for balanced performance.
+
+- **Allocation Strategy**: The library uses `calloc` internally; object memory is contiguous—avoid fragmentation by consistent object sizing.
+
+- **Avoid In-Place Object Mutation**: Changing object keys after insertion leads to inconsistent ordering.
+
+- **Callback Efficiency**: Minimize expensive operations in your compare callbacks to keep insertion/search operations fast.
+
+- **Debugging Output**: The assembly code includes debug `printf` calls (marked `BEGIN PRINTF` and `END PRINTF`). Disable these in production by commenting them out for cleaner output and faster performance.
+
+---
+
+## 5. Handling Corner Cases and Common Pitfalls
+
+### Empty Tree and NULL Root
+- Before any operations, the root pointer may be NULL.
+- The library’s `b_insert` creates a root if needed.
+- Calling search or delete on an empty tree will return appropriately (`NULL` or no-op).
+
+### Duplicate Keys
+- The current implementation allows duplicates depending on your compare logic.
+- Handle duplicates consistently in your `o_cmp_cb` and `k_cmp_cb` to avoid subtle bugs.
+
+### Deletion of Non-Existent Keys
+- Calling `b_remove` with a key that does not exist is safe and has no effect.
+- The demo explicitly tests this scenario.
+
+### Callback Contract Violations
+- Callbacks must always respect the comparison and key extraction contract.
+- Failure to comply can corrupt the tree or cause undefined behavior.
+
+<Warning>
+The demo’s `DATA_COUNT` and `DELETE_COUNT` can be modified but should be adjusted carefully to avoid invalid states.
+</Warning>
+
+### Thread Safety
+- The library is not inherently thread safe.
+- Synchronize access to the tree externally if used in concurrent environments.
+
+---
+
+## 6. Practical Example: Custom Callbacks and Usage from Demo
+
+Here is a distilled model of callbacks used in the demo (`btest/main.c`):
+
+```c
+// Compare two data_t objects by their double key
+int o_cmp_cb(void const *vp1, void const *vp2) {
+    data_t const *d1 = vp1;
+    data_t const *d2 = vp2;
+    if (d1->d > d2->d) return 1;
+    else if (d1->d < d2->d) return -1;
+    return 0;
+}
+
+// Compare a double key with a data_t object
+int k_cmp_cb(void const *key, void const *obj) {
+    double k = *(double const *)key;
+    data_t const *d = obj;
+    if (k > d->d) return 1;
+    else if (k < d->d) return -1;
+    return 0;
+}
+
+// Extract the key from a data_t object
+void const * k_get_cb(void const *obj) {
+    data_t const *d = obj;
+    return &d->d;
+}
+
+// Delete callback: print info or free resources
+void o_del_cb(void const *obj) {
+    data_t const *d = obj;
+    // custom cleanup logic here
+}
+```
+
+Use these callbacks to initialize your BTree:
+
+```c
+b_tree_t *tree = b_tree_alloc();
+b_tree_init(tree, MINIMUM_DEGREE, sizeof(data_t), o_cmp_cb, k_cmp_cb, o_del_cb, k_get_cb);
+```
+
+Perform inserts, searches, and deletions as needed, then always terminate:
+
+```c
+b_tree_term(tree);
+b_tree_free(tree);
+```
+
+---
+
+## 7. Troubleshooting and Advice
+
+<AccordionGroup title="Common Issues and Solutions">
+<Accordion title="Tree Does Not Grow or Insertions Fail">
+- Confirm your object compare callback returns correct ordering.
+- Check that objects inserted have proper size matching initialization.
+- Enable debug prints temporarily to track operations.
+</Accordion>
+<Accordion title="Memory Leaks or Crashes Upon Termination">
+- Verify that `o_del_cb` correctly frees dynamic memory.
+- Ensure no mutations on objects after insertion.
+- Confirm that `b_tree_term` is called to clean the full tree.
+</Accordion>
+<Accordion title="Duplicate Keys Showing Unexpected Behavior">
+- Rethink your `o_cmp_cb` logic to ensure consistent ordering.
+- Consider disallowing duplicates or handle them explicitly in your callbacks.
+</Accordion>
+<Accordion title="Unexpected Search Results or Missing Keys">
+- Validate your `k_cmp_cb` matches the key extraction from `k_get_cb`.
+- Confirm keys are consistent and immutable through the object lifecycle.
+- Use the demo pattern as a reference for callback correctness.
+</Accordion>
+</AccordionGroup>
+
+<Tip>
+Use the demo program as a baseline reference by modifying parameters like `DATA_COUNT` and `DELETE_COUNT` safely in `btest/main.h` to experiment and validate behaviors.
+</Tip>
+
+---
+
+## 8. Next Steps & Related Resources
+
+- Review the [Using the BTree C Interface](../core-workflows/using-btree-c-interface) guide for detailed API usage.
+- Explore the [Integrating BTree into Your Project](../real-world-usage-optimization/integrating-btree-into-your-project) guide for embedding strategies.
+- Consult [Troubleshooting Common Setup Issues](../../getting-started/troubleshooting/troubleshooting-setup) for build and runtime diagnostics.
+- Understand [Core Concepts & Terminology](../../overview/intro-value/terminology) for fundamental BTree knowledge.
+
+For the full demo source code and additional examples, visit the [GitHub Repository](https://github.com/KatoKode/BTree).
+
+---

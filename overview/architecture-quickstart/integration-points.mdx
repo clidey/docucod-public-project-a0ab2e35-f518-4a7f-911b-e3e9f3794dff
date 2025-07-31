@@ -1,0 +1,155 @@
+---
+title: "Integration & Extensibility Overview"
+description: "Short primer on how this library is designed for integration—outlining the shared library model, C header interface, and how users might embed or extend it in their own applications."
+---
+
+# Integration & Extensibility Overview
+
+Explore how the BTree library is designed for seamless integration into your own projects and extensibility to fit specific needs. This overview explains the shared library architecture, the C interface exposed for easy embedding, and approaches to extend or customize the BTree implementation.
+
+---
+
+## Designed for Integration: The Shared Library Model
+
+At its core, the BTree implementation is compiled into a shared library (`libbtree.so`) that encapsulates high-performance x86_64 assembly logic with a clean C interface. This modular design provides several key integration benefits:
+
+- **Language Agnostic Access via C Interface:** The shared library exposes all essential functions through C-compatible symbols, enabling usage from C and other languages with C foreign function interfaces.
+- **Binary Compatibility:** Precompiled shared objects allow easy linking into projects without requiring users to build the assembly source themselves.
+- **Code Encapsulation:** The assembly internals are hidden behind the shared library boundary, reducing risk and complexity for integrating applications.
+- **Concurrent and Thread-Friendly:** The runtime supports multithreaded applications, as demonstrated by the included demo.
+
+### How the Shared Library Works
+
+The shared library bundles assembly routines with a C API, making key BTree operations available via function calls, such as:
+
+- `b_tree_init()` — Initialize the BTree structure with user callbacks
+- `b_insert()` / `b_remove()` — Insert and remove keys
+- `b_search()` — Lookup keys efficiently
+- `b_tree_term()` — Cleanup and free all allocated structures
+
+All callbacks for comparison, key extraction, and deletion are provided by the user, maximizing integration flexibility.
+
+---
+
+## Embedding the BTree Library in Your Application
+
+### Step 1: Include the C Header
+
+The primary interface is defined in the header `btree/btree.h`. Here you will find all function declarations, type definitions, and callback prototypes necessary to interact with the BTree.
+
+```c
+#include "btree/btree.h"
+```
+
+### Step 2: Link Against the Shared Library
+
+Compile your C or C-compatible source code linking against `libbtree.so` as shown:
+
+```bash
+gcc -march=x86-64 -m64 -Wall your_app.c -L/path/to/lib -lbtree -o your_app
+```
+
+For projects using the provided makefiles and build scripts, the linkage is automated.
+
+### Step 3: Provide Required Callbacks to Customize Behavior
+
+- **Object Comparison (`o_cmp_cb`)** – function to compare two objects stored in the tree.
+- **Key Comparison (`k_cmp_cb`)** – function to compare a key with an object.
+- **Delete Callback (`o_del_cb`)** – function called to clean up objects when removed.
+- **Get Key Callback (`k_get_cb`)** – function to extract key from an object.
+
+These let you tailor the BTree to your specific data and ordering requirements.
+
+---
+
+## Extensibility Options
+
+While the core BTree is implemented in minimal and highly optimized assembly, extensibility can be achieved through:
+
+### 1. Custom Callbacks
+
+Your application provides behavior-specific logic via callbacks passed during `b_tree_init()`. This design allows:
+
+- Custom key types and comparison logic
+- Specialized deletion procedures such as freeing associated resources
+- Iteration and walking through tree elements with custom visitor functions
+
+### 2. Demo Code as a Reference for Extension
+
+The demo program (`btest/main.c` and `btest/main.h`) showcases practical usage examples, including:
+
+- How to allocate, initialize, and free the tree
+- How to insert, search, and delete elements
+- Working with user-defined data structures wrapped in the tree
+
+You can use these as templates to extend or embed the BTree in your own applications.
+
+### 3. Modifying and Rebuilding
+
+As the source code is open under the GPLv2+ license, you can modify the assembly and C sources to add new methods or adjust internal policies. The build system with makefiles and shell scripts simplifies rebuilding the library from source.
+
+---
+
+## Example: Integrate & Use BTree in Your Project
+
+```c
+#include "btree/btree.h"
+#include <stdio.h>
+
+// Define comparison callback
+int cmp_obj(const void* a, const void* b) {
+  // Implement your object-object comparison logic
+}
+
+int cmp_key(const void* key, const void* obj) {
+  // Implement your key-object comparison logic
+}
+
+void del_obj(const void* obj) {
+  // Clean up resources associated with obj
+}
+
+const void* get_key(const void* obj) {
+  // Return key pointer from object
+}
+
+int main() {
+  b_tree_t *tree = b_tree_alloc();
+  if (!tree) {
+    fprintf(stderr, "Failed to allocate BTree\n");
+    return 1;
+  }
+
+  b_tree_init(tree, 15 /* mindeg */, sizeof(MyObject), cmp_obj, cmp_key, del_obj, get_key);
+
+  // Insert, delete, search as needed
+
+  b_tree_term(tree);
+  b_tree_free(tree);
+
+  return 0;
+}
+```
+
+---
+
+## Troubleshooting & Tips
+
+- **Callback Safety:** Ensure all callbacks are thread-safe if your application is multithreaded.
+- **Memory Management:** Manage memory carefully; the library expects you to provide cleanup callbacks.
+- **Library Updates:** If modifying assembly internals, thoroughly test for correctness and performance impacts.
+- **Demo Reference:** Consult `btest/main.c` for a working example and to understand thread interactions.
+
+---
+
+## Next Steps
+
+- Read the [Project Architecture](overview/architecture-quickstart/system-architecture.md) page for a detailed component breakdown.
+- Follow guides on [Using the BTree C Interface](guides/core-workflows/using-btree-c-interface.md) to deepen API knowledge.
+- Explore [BTree Best Practices and Patterns](guides/real-world-usage-optimization/btree-best-practices.md) for production readiness.
+
+---
+
+For more details and source, visit the official repository: [BTree GitHub](https://github.com/KatoKode/BTree)
+
+---

@@ -1,0 +1,169 @@
+---
+title: "Configuring the Demo Program"
+description: "Explains how to adjust demo-specific parameters like `DATA_COUNT` and `DELETE_COUNT` in `btest/main.h`, including their roles and safe usage guidelines for shaping demo behavior."
+---
+
+# Configuring the Demo Program
+
+This page explains how to customize the demo program of the BTree project by adjusting key parameters within the `btest/main.h` header file. These parameters control the volume of data inserted into the tree and how many elements are deleted during the demo run, thereby shaping its behavior.
+
+---
+
+## 1. Understanding Demo Configuration Parameters
+
+The demo program uses two primary parameters defined as preprocessor macros in `btest/main.h`:
+
+- `DATA_COUNT`: Specifies the total number of random data elements inserted into the BTree during the demo.
+- `DELETE_COUNT`: Defines the number of data elements that will be deleted from the BTree after insertion.
+
+### Location of Configuration Parameters
+
+These definitions are located near the top of `btest/main.h`:
+
+```c
+#define DATA_COUNT    128
+#define DELETE_COUNT  0
+```
+
+### Roles of These Parameters
+
+- **`DATA_COUNT`** controls the size and complexity of the BTree constructed during the demo. Increasing this value results in a larger tree with more entries.
+- **`DELETE_COUNT`** controls how many data entries are removed from the tree to demonstrate the deletion operation. This number must be less than or equal to `DATA_COUNT` to avoid runtime errors.
+
+---
+
+## 2. How to Safely Modify Demo Parameters
+
+Follow these steps to safely adjust demo behavior:
+
+<Steps>
+<Step title="Open the Configuration Header">
+Locate and open the `btest/main.h` file in your preferred text editor.
+</Step>
+<Step title="Modify DATA_COUNT">
+Change the value of `DATA_COUNT` to the desired number of data entries you want the demo to insert. For example, to insert 200 items, update:
+```c
+#define DATA_COUNT    200
+```
+</Step>
+<Step title="Modify DELETE_COUNT">
+Set `DELETE_COUNT` to the number of entries you want deleted during the demo. Ensure that it does not exceed the `DATA_COUNT` value to prevent undefined behavior.
+```c
+#define DELETE_COUNT  50
+```
+</Step>
+<Step title="Save Your Changes">
+Save the file after making your changes.
+</Step>
+<Step title="Rebuild the Demo Application">
+Navigate to the root directory and run the build script to recompile the demo program so it incorporates your parameter changes:
+
+```bash
+sh ./btree_make.sh
+```
+</Step>
+<Step title="Run the Updated Demo">
+Execute the demo with a random seed parameter, for example:
+
+```bash
+./btest 123456
+```
+Observe how the demo operates with your defined `DATA_COUNT` and `DELETE_COUNT`.
+</Step>
+</Steps>
+
+---
+
+## 3. Practical Tips and Guidelines
+
+- **Avoid Negative and Invalid Values:** The demo program does not perform checks for negative values or if `DELETE_COUNT` exceeds `DATA_COUNT`. Setting invalid values can cause unexpected or erroneous behavior.
+- **Balance Data Volume and Performance:** Higher `DATA_COUNT` values increase demo execution time and memory usage. Begin with moderate values when experimenting.
+- **Using Delete Count = 0:** Setting `DELETE_COUNT` to zero disables deletion operations in the demo, allowing full tree insertion and traversal.
+- **Random Seed Impact:** The random seed you pass to `./btest` controls the randomness of data generated, affecting duplicate avoidance and deletion patterns.
+
+---
+
+## 4. Example Scenario
+
+Suppose you want to run a demo with 256 insertions and 20 deletions:
+
+1. Edit `btest/main.h`:
+```c
+#define DATA_COUNT    256
+#define DELETE_COUNT  20
+```
+2. Save and recompile:
+```bash
+sh ./btree_make.sh
+```
+3. Run the demo with specific seed:
+```bash
+./btest 987654
+```
+The demo will insert 256 random unique data points into the BTree, then proceed to delete the first 20 entries as configured.
+
+---
+
+## 5. Common Pitfalls & Troubleshooting
+
+<AccordionGroup title="Troubleshooting Demo Configuration">
+<Accordion title="Demo Crashes or Unexpected Behavior After Parameter Change">
+Check if `DELETE_COUNT` is greater than `DATA_COUNT`. If so, reduce `DELETE_COUNT` to prevent invalid memory operations.
+</Accordion>
+<Accordion title="Demo Runs But Does Not Output Expected Deletes">
+Verify that `DELETE_COUNT` is set properly and the program recompilation included your changes. Clean rebuild if needed using:
+
+```bash
+make clean
+sh ./btree_make.sh
+```
+</Accordion>
+<Accordion title="Duplicate Data Causes Infinite Loop at Insert">
+The demo uses a random double generator that attempts to avoid duplicates. If the data range is too small or `DATA_COUNT` is too large, duplicates may cause delays. Try increasing the randomness or reducing `DATA_COUNT`.
+</Accordion>
+<Accordion title="I Want to Disable the Deletion Phase Completely">
+Simply set `DELETE_COUNT` to zero in `btest/main.h` and rebuild the demo.
+</Accordion>
+</AccordionGroup>
+
+---
+
+## 6. Additional Notes
+
+- The demo program contains calls to `printf` embedded in the assembly (`btree.asm`) for demonstration and logging purposes. These can be removed or commented out for cleaner output or production use.
+- For full demo build and run instructions, refer to the [Building & Running the Demo](../../overview/architecture-quickstart/quickstart-demo.md) page.
+
+---
+
+## 7. References
+
+- `btest/main.h`: Contains the demo parameters `DATA_COUNT` and `DELETE_COUNT`.
+- [Building & Running the Demo](../../overview/architecture-quickstart/quickstart-demo.md): Full guide on demo compilation and execution.
+- [Running the Demo](../../getting-started/configuration-first-run/running-the-demo.md): Instructions for executing the demo.
+
+---
+
+## 8. Summary
+
+Adjusting the `DATA_COUNT` and `DELETE_COUNT` parameters inside `btest/main.h` enables customized demo runs by controlling insertion and deletion volumes. Careful modification with respect to validation guidelines ensures stable demo behavior and meaningful test scenarios. After updating these parameters, recompilation is required to apply the changes.
+
+---
+
+## Helpful Links
+- [System Requirements & Installation Instructions](../../getting-started/requirements-installation/installation-instructions.md)
+- [Quick Validation Steps](../../getting-started/configuration-first-run/quick-validation.md)
+- [Troubleshooting Setup Issues](../../getting-started/troubleshooting/troubleshooting-setup.md)
+- [BTree C Interface Guide](../../guides/core-workflows/using-btree-c-interface.md)
+
+---
+
+## Need Help?
+If you encounter issues related specifically to demo configuration or run-time behavior, consult the Troubleshooting section or raise an issue via the GitHub repository: [BTree Project GitHub](https://github.com/KatoKode/BTree)
+
+
+---
+
+# Page Source
+For an in-depth understanding, see the relevant configuration in the [`btest/main.h`](https://github.com/KatoKode/BTree/blob/main/btest/main.h) file.
+
+---

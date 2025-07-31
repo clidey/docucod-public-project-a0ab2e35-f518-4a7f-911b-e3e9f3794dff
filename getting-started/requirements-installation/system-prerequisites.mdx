@@ -1,0 +1,120 @@
+---
+title: "System Requirements"
+description: "Details the supported environments, required tools such as Linux, NASM, GCC, make, and a text editor. Explains why each tool is needed and how it fits into the typical user’s workflow."
+---
+
+# System Requirements
+
+Ensure your environment and tools meet the following system requirements to successfully build, run, and explore the BTree project.
+
+---
+
+## 1. Supported Operating Systems
+
+- **Linux OS**: The BTree implementation is designed specifically for Linux environments. It leverages Linux system calls and relies on toolchains common on Linux platforms.
+
+> This focus ensures maximum compatibility with x86_64 assembly, GCC, and NASM assembler behaviors on Linux.
+
+---
+
+## 2. Hardware Architecture
+
+- **x86_64 CPU architecture**: The assembly source code (`btree.asm`) targets 64-bit x86 platforms.
+
+> The implementation uses specific CPU registers and calling conventions consistent with the System V AMD64 ABI used on Linux.
+
+---
+
+## 3. Required Development Tools
+
+### Netwide Assembler (NASM)
+- Used to assemble the `.asm` files within the project.
+- Must support 64-bit output compatible with GCC linking.
+
+### GCC Compiler
+- Compiles the C source files, including the demo and supporting utilities.
+- Links assembled object code and builds the final binaries/shared libraries.
+- Supports `-march=x86-64` and related options for 64-bit builds.
+
+### make Utility
+- Automates the build process, running compilation and linking according to provided Makefiles and build scripts.
+
+### Text Editor
+- Any capable text editor or IDE suitable for editing C and Assembly code.
+
+---
+
+## 4. Runtime Tools
+
+- **Standard Linux command line environment**
+- Shell (`bash` or compatible) to run build scripts such as `btree_make.sh` and demo scripts like `go_btest.sh`.
+
+---
+
+## 5. Libraries and Dependencies
+
+- No external libraries beyond standard C library and Linux system libraries are required.
+- The BTree library is self-contained, but does interface to standard libc functions such as `calloc`, `free`, `memset`, and `printf`.
+
+---
+
+## 6. Network and Permissions
+
+- No specific network connectivity is required.
+- Permissions needed to compile and run code, including executing scripts and creating files.
+
+---
+
+## 7. Tool Purpose and Workflow
+
+| Tool             | Purpose                              | Role in Workflow                                     |
+|------------------|------------------------------------|-----------------------------------------------------|
+| NASM             | Assembles `.asm` source             | Produces object files from Assembly code            |
+| GCC              | Compiles and links C code           | Builds demo executable and shared libraries          |
+| make             | Build automation                    | Runs compilation/linking targets reliably            |
+| Shell            | Script execution and command input | Executes build and run scripts                        |
+| Text Editor      | Source code editing                 | Modify and customize code and parameters              |
+
+---
+
+## 8. Practical Tips
+
+- Make sure NASM is installed and accessible in your path for assembling `.asm` files.
+- Verify GCC version supports 64-bit compilation (`gcc --version`).
+- Use the provided `btree_make.sh` script as it orchestrates building all components in order.
+- Confirm execution permissions on shell scripts (`chmod +x ./btree_make.sh` and `chmod +x ./go_btest.sh`).
+- Ensure your Linux user has the rights to create files and run processes in the workspace.
+
+---
+
+## 9. Troubleshooting Common Environment Issues
+
+- **NASM not found**: Install via your package manager, e.g., `sudo apt install nasm`.
+- **GCC missing or outdated**: Install/upgrade with `sudo apt install gcc` or `gcc-<version>`.
+- **make command not found**: Install with `sudo apt install make`.
+- **Permission denied running scripts**: Adjust with `chmod +x scriptname.sh`.
+- **Build failures**: Check that all dependencies as above are installed, and that NASM and GCC commands in the Makefiles are correct for your platform.
+
+---
+
+For a smooth start, confirm your system meets all these requirements before proceeding to installation and running the demo.
+
+
+## Related Pages and Next Steps
+
+- [Building & Running the Demo](https://your-docs-domain/overview/architecture-quickstart/quickstart-demo) — Instructions for building and executing the demo program.
+- [Installation Instructions](https://your-docs-domain/getting-started/requirements-installation/installation-instructions) — Step-by-step guidance on installing tools and building the project.
+- [Key Features & Capabilities](https://your-docs-domain/overview/intro-value/core-features) — Understand what the BTree implementation provides.
+- [Product Introduction & Core Concepts](https://your-docs-domain/overview/intro-value/product-summary) — High-level summary of the project.
+
+---
+
+## Example: Verify Tool Availability
+
+In your terminal, check the availability of required tools:
+
+```bash
+nasm -v       # Should output NASM version
+gcc --version # Should show GCC version
+make --version # Should print make utility version
+```

@@ -1,0 +1,153 @@
+---
+title: "First Successful Run"
+description: "Provides detailed instructions to run the demo via `btest/go_btest.sh`, highlights expected outputs, and confirms successful installation and configuration for new users."
+---
+
+# First Successful Run
+
+Welcome to the exciting stage where you will run your first successful operation of the BTree project demo. This guide walks you through executing the demo program, interpreting the output, and confirming that your installation and configuration are working flawlessly.
+
+---
+
+## 1. Running the Demo Program
+
+After successfully building the project (refer to the Installation Instructions and Building & Running the Demo guides), you are ready to run the demo. The demo executable `btest` uses randomized input to showcase BTree insertion, traversal, and (optionally) deletion.
+
+### Steps to Run
+
+1. Open a terminal and navigate to the `btest` directory inside your BTree project folder:
+   ```bash
+   cd btest
+   ```
+
+2. Run the provided shell script to execute the demo with a randomized seed:
+   ```bash
+   ./go_btest.sh
+   ```
+
+3. The script generates a random seed and passes it to the demo program, which creates and manipulates the BTree data structure.
+
+4. Output is redirected to a file named `out.txt` in the same directory for easy review.
+
+5. Once the demo finishes, you will be prompted to view the output:
+   ```
+   View file ./out.txt? [Y/n] 
+   ```
+
+6. Press `Y` (or just Enter) to open and browse the output using `less`, or `N` to exit.
+
+### What Happens Behind the Scenes
+
+- The demo initializes a BTree with 128 (default) unique random floating-point numbers.
+- These values are inserted into the BTree, demonstrating the insertion algorithms.
+- The tree is walked (traversed), printing the inserted data in order.
+- If deletion is configured (`DELETE_COUNT > 0` in `main.h`), specified keys are removed and the tree state is verified.
+- The program attempts deleting a random value not in the tree to show deletion handling.
+- Finally, all allocated resources are released cleanly.
+
+---
+
+## 2. Understanding the Output
+
+The demo program outputs detailed information about its internal operations and the tree’s state to `out.txt`. Here is what to expect:
+
+- **Operation Headers:** Messages like `---| b_insert |---` or `---| walk tree |---` indicate the current phase.
+- **Callback Logs:** Each comparison and key retrieval prints diagnostics when inserting, searching, or deleting keys.
+- **Data Entries:** The traversal outputs indices and their corresponding values, illustrating the BTree ordering.
+- **Deletion Logs:** If enabled, deletions and search validations are output with confirmation or error messages.
+- **Final Confirmation:** Resource cleanup and termination messages indicate graceful completion.
+
+### Sample Output Snippet
+
+```
+---| begin delete |---
+
+---| begin search after delete |---
+
+---| DELETION ERROR! |---
+
+---| walk tree |---
+
+  0:  d: 0.123456 s: 0.123456
+  1:  d: 0.234567 s: 0.234567
+  ...
+
+alls well that ends well.
+```
+
+Use this output to verify that the demo behaves as expected.
+
+---
+
+## 3. Confirming Success
+
+You have successfully completed the first run when:
+
+- The `go_btest.sh` script executes without errors.
+- The `out.txt` file contains operation logs and a complete tree traversal.
+- No critical errors or panics occur during execution.
+- The tree is built, traversed, and optionally deletes keys correctly.
+
+<Tip>
+If you see messages about deletion errors or unexpected output, review your parameter settings in `btest/main.h` and ensure the demo was rebuilt.
+</Tip>
+
+---
+
+## 4. Tips and Best Practices
+
+- **Repeatable Runs:**  The demo runs with random seeds. Rerunning `./go_btest.sh` generates new data, helping validate various scenarios.
+- **Adjust Defaults:**  Change `DATA_COUNT` and `DELETE_COUNT` in `btest/main.h` to see different demo behaviors.
+- **Examine Output Logs:**  Use `less ./out.txt` or `tail -f ./out.txt` during execution to catch real-time logs.
+- **Clean Rebuild:**  If you modify parameters or source code, run `sh ./btree_make.sh` to rebuild before rerunning the demo.
+- **Permissions:**  Ensure `go_btest.sh` has execute permissions (`chmod +x go_btest.sh`) to avoid permission issues.
+
+---
+
+## 5. Troubleshooting Common Issues
+
+<AccordionGroup title="Troubleshooting Your First Run">
+<Accordion title="Demo script will not execute (Permission Denied)">
+Verify that `go_btest.sh` has executable permissions:
+```bash
+chmod 744 go_btest.sh
+```
+Retry running the script.
+</Accordion>
+<Accordion title="No output or empty out.txt">
+Make sure the build steps succeeded without errors. Rebuild the project:
+```bash
+sh ./btree_make.sh
+```
+Run the demo again. Confirm the presence of `btest` executable in the `btest` folder.
+</Accordion>
+<Accordion title="Demo crashes or segmentation fault">
+Check that essential dependencies (NASM, GCC, make) are correctly installed and compatible. Review system architecture and requirements in the System Requirements page.
+</Accordion>
+<Accordion title="Deletion errors appear in logs">
+Verify `DELETE_COUNT` does not exceed `DATA_COUNT` in `btest/main.h`. Negative values are not supported.
+</Accordion>
+</AccordionGroup>
+
+---
+
+## 6. Next Steps
+
+- Customize your demo parameters in [Configuring the Demo Program](/getting-started/configuration-first-run/demo-configuration).
+- Explore the [Using the BTree C Interface](/guides/core-workflows/using-btree-c-interface) to integrate into your own projects.
+- Familiarize yourself with troubleshooting tips in [Troubleshooting Common Setup Issues](/getting-started/troubleshooting/troubleshooting-setup).
+
+---
+
+## 7. Resources and References
+
+- **GitHub Repository:** [https://github.com/KatoKode/BTree](https://github.com/KatoKode/BTree)
+- **Building & Running the Demo:** Guides you through building from source and running the demo.
+- **System Requirements:** Confirm your environment matches the prerequisites.
+
+---
+
+Congratulations on reaching this milestone! Your BTree demo runs successfully, giving you a practical foundation to explore this high-performance data structure in real projects.
+
+
+---

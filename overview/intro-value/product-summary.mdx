@@ -1,0 +1,129 @@
+---
+title: "What is the BTree Project?"
+description: "An overview of the BTree implementation in x86_64 Assembly with a C interface. Understand the project's purpose, how it differentiates itself, and what problems it solves for Linux developers needing efficient multiway tree data structures."
+---
+
+# What is the BTree Project?
+
+## Unlocking High-Performance Multiway Trees for Linux Developers
+
+The BTree Project presents a powerful, low-level implementation of a BTree data structure specifically designed for Linux environments. Written in optimized x86_64 Assembly language and accessible via a clean C interface, this project delivers an exceptional balance of speed, control, and usability for developers who require efficient multiway tree operations.
+
+### Why the BTree Project Matters
+
+Modern applications often demand dynamic, balanced data structures capable of handling large datasets with efficient search, insertion, and deletion capabilities. BTree structures excel at this, maintaining order and balance while minimizing disk reads or memory cache misses.
+
+This project goes beyond typical implementations by optimizing core tree operations in assembly, significantly boosting performance on 64-bit Linux systems while maintaining the accessibility of a C programming interface.
+
+---
+
+## What Is the BTree Project?
+
+The BTree Project is a complete implementation of a BTree (multiway tree) in x86_64 Assembly language, wrapped as a shared library and exposing a C-compatible interface for practical integration.
+
+### Core Purpose
+
+It is specifically crafted to:
+
+- Provide Linux developers with a blazing-fast BTree implementation that is lightweight and highly efficient.
+- Enable fine-grained control over tree behavior through user-supplied callback functions for object comparison, key extraction, and deletion handling.
+- Allow storage of arbitrary data types in the tree with flexible object sizing.
+
+### What Problems Does It Solve?
+
+- **Performance bottlenecks** in tree-based data storage and indexing by leveraging low-level assembly optimizations.
+- **Complexity in writing custom balanced tree logic** by offering a ready-made, extensible, and well-tested BTree core.
+- **Flexibility challenges** by making it easy to adapt the BTree to any object type and comparison logic.
+
+### Unique Differentiators
+
+- **Assembly Language Backbone:** Unlike most BTrees implemented in higher-level languages, this version exploits assembly language for fine-tuned CPU instruction control.
+- **Customizable Behaviors:** Full support for user-defined callbacks for object and key comparisons, key retrieval, and deletion processing.
+- **Shared Library with C Interface:** Integrates seamlessly with C projects, providing wide compatibility.
+- **Comprehensive Demo Included:** Comes with a test harness in C to demonstrate functionality right out of the box.
+
+---
+
+## How the BTree Project Works
+
+At its core, the BTree stores objects in nodes with multiple children, offering a balanced tree structure that minimizes the height and ensures logarithmic time operations. This project’s assembly code meticulously manages memory, node splitting, merging, and key hunting ensuring maximum efficiency.
+
+The C interface wraps these assembly routines, exposing easy-to-use functions such as:
+
+- `b_insert()` to add objects
+- `b_remove()` to delete objects
+- `b_search()` to find objects
+- `b_walk()` to traverse the entire tree
+
+These functions rely on user callbacks to compare objects (`o_cmp_cb`), keys (`k_cmp_cb`), extract keys (`k_get_cb`), and handle deletes (`o_del_cb`), offering maximum flexibility.
+
+---
+
+## Key Benefits
+
+- **Speed:** By using assembly, BTree operations run faster than typical C implementations, reducing latency in critical applications.
+- **Memory Efficiency:** Careful memory management supports dynamic allocation of nodes and objects.
+- **Adaptability:** The modular design with callbacks lets you store and manage any data type effectively.
+- **Transparency:** The included demo and verbose printf statements (removable) provide insight into internal operations, aiding debugging and learning.
+
+---
+
+## Real-World Developer Scenarios
+
+- You are building a filesystem or database index and need a high-performance multiway tree to handle millions of entries.
+- You want to embed a compact, customizable sorted data store into your Linux application without relying on bulky external libraries.
+- You need full control over comparing, deleting, and retrieving keys in your tree entries for specialized data processing.
+
+---
+
+## Getting Started
+
+To explore the BTree Project, you can build and run the included demo program which showcases insertion, searching, and deletion with randomly generated numeric keys.
+
+1. Clone the repository:
+```bash
+ git clone https://github.com/KatoKode/BTree.git
+```
+
+2. Build the shared library and demo using the provided `btree_make.sh` shell script:
+```bash
+ sh ./btree_make.sh
+```
+
+3. Run the demo executable in the `btest` folder:
+```bash
+ ./go_btest.sh
+```
+
+This will generate randomized data and demonstrate BTree operations, outputting detailed info to a text file.
+
+---
+
+## Next Steps
+
+- Review the [Key Features & Capabilities](../core-features) to understand the full API and performance advantages.
+- Explore [Using the BTree C Interface](../../guides/core-workflows/using-btree-c-interface) for integration guidance.
+- Dive into [Project Architecture](../system-architecture) to understand how the assembly and C layers collaborate.
+
+
+---
+
+## Additional Resources
+
+- [GitHub Repository](https://github.com/KatoKode/BTree)
+- [GeeksforGeeks Reference: Delete Operation in B-Tree](https://www.geeksforgeeks.org/delete-operation-in-b-tree/?ref=lbp)
+
+
+---
+
+<Tip>
+Consider customizing your data comparison and deletion callbacks to optimize the BTree for your specific data types.
+</Tip>
+
+<Warning>
+The current demo program does not validate negative or out-of-range parameters; ensure your input values are within expected bounds.
+</Warning>
+
+<Note>
+The verbose `printf` calls in the assembly code are for demonstration purposes and can be disabled to improve runtime performance in production builds.
+</Note>

@@ -1,0 +1,286 @@
+---
+title: "Integrating BTree into Your Project"
+description: "Step-by-step instructions for linking the shared library, incorporating headers, and using the BTree in your own C projects. Covers configuration, dependency management, and integration tips tailored to different development setups."
+---
+
+# Integrating BTree into Your Project
+
+This guide provides concrete, actionable steps for integrating the BTree shared library into your own C projects. You will learn how to configure your build environment, link the BTree shared library, incorporate its headers, and properly utilize BTree’s core features through the C interface. Whether you are building a small utility or embedding a high-performance BTree in a complex system, these instructions will help you get started confidently and avoid common pitfalls.
+
+---
+
+## 1. Overview
+
+### What You Will Achieve
+- Link the `libbtree.so` shared library into your C projects.
+- Include and configure the BTree headers for seamless compilation.
+- Use the core BTree API functions to initialize, insert, search, delete, traverse, and terminate your BTree instance.
+
+### Prerequisites
+- Linux OS on x86_64 architecture (compatible with the BTree build).
+- The BTree shared library (`libbtree.so`) built and available locally. See [Building & Running the Demo](/overview/architecture-quickstart/quickstart-demo) for build instructions.
+- Basic familiarity with compiling and linking C programs.
+
+### Expected Outcome
+By completing this guide, you'll be able to embed the BTree library in your own C project, linking dynamically against the shared library, invoking key BTree operations, and handling callbacks for customized object management.
+
+### Time Estimate
+10–20 minutes depending on your familiarity with C build tools and linking dynamic libraries.
+
+### Difficulty Level
+Beginner to Intermediate - ideal for C developers integrating third-party libraries.
+
+---
+
+## 2. Step-by-Step Integration Instructions
+
+### Step 1: Prepare BTree Shared Library
+
+Ensure you have successfully built the BTree shared library `libbtree.so`. This is done by running the provided build script from the root folder:
+
+```bash
+sh ./btree_make.sh
+```
+
+This script builds the utility, the BTree shared library, and the demo program.
+
+<Tip>
+If the `libbtree.so` file is not found after the build, verify your environment, make sure NASM and GCC are installed, and that you have the correct permissions.
+</Tip>
+
+### Step 2: Include BTree Headers in Your C Source
+
+Your C files should include the BTree public interface header located under `btree/btree.h`. For example:
+
+```c
+#include "btree/btree.h"
+```
+
+If you use utility functions, include `util/util.h` as needed.
+
+<Tip>
+Maintain the correct relative paths or configure your compiler's include paths to locate headers properly with `-I` flags.
+</Tip>
+
+### Step 3: Link Against the Shared Library in Your Build
+
+When compiling your C project, link against `libbtree.so`. Assuming the library is located at `../btree/libbtree.so`, your `gcc` command should look like this:
+
+```bash
+gcc -march=x86-64 -m64 -z noexecstack your_source.o ../btree/libbtree.so -o your_program
+```
+
+If your project also depends on the `libutil.so` library (used in many demos), include it as well:
+
+```bash
+gcc -march=x86-64 -m64 -z noexecstack your_source.o ../btree/libbtree.so ../util/libutil.so -o your_program
+```
+
+Ensure `libbtree.so` is in your runtime library path (`LD_LIBRARY_PATH`) or installed in a standard location.
+
+### Step 4: Initialize the BTree Instance
+
+Before using the BTree, allocate and initialize a `b_tree_t` tree structure with:
+
+```c
+b_tree_t *tree = b_tree_alloc();
+b_tree_init(tree, mindeg, object_size, o_cmp_cb, k_cmp_cb, o_del_cb, k_get_cb);
+```
+
+- `mindeg` is the minimum degree of the tree (controls node sizes).
+- `object_size` is the size of each stored object.
+- Callback functions (`o_cmp_cb`, `k_cmp_cb`, `o_del_cb`, `k_get_cb`) customize object comparison, key comparison, deletion callback, and key retrieval.
+
+Refer to the demo source (`btest/main.c`) for example implementations.
+
+### Step 5: Use Core Operations
+
+- **Insert objects:**
+
+  ```c
+  b_insert(tree, object_ptr);
+  ```
+
+- **Search for keys:**
+
+  ```c
+  void *result = b_search(tree->root, key_ptr, buffer);
+  if (result != NULL) {
+      // found
+  }
+  ```
+
+- **Remove objects by key:**
+
+  ```c
+  b_remove(tree, key_ptr);
+  ```
+
+- **Traverse the tree:**
+
+  ```c
+  b_walk(tree, walk_callback);
+  ```
+
+- **Terminate and free tree:**
+
+  ```c
+  b_tree_term(tree);
+  b_tree_free(tree);
+  ```
+
+### Step 6: Compile and Run
+
+Compile your program incorporating all dependencies and run it:
+
+```bash
+gcc -march=x86-64 -m64 -z noexecstack main.o ../btree/libbtree.so ../util/libutil.so -o my_btree_app
+./my_btree_app
+```
+
+<Tip>
+Ensure the callbacks you provide for comparison and deletion are consistent with your stored object structure.
+</Tip>
+
+---
+
+## 3. Practical Example: Minimal Integration
+
+Here is a minimal example illustrating integration in your C source:
+
+```c
+#include <stdio.h>
+#include "btree/btree.h"
+
+// Define your data structure
+typedef struct {
+    int key;
+} my_data_t;
+
+// Callback functions
+int object_compare(void const *a, void const *b) {
+    my_data_t const *d1 = a;
+    my_data_t const *d2 = b;
+    return (d1->key > d2->key) - (d1->key < d2->key);
+}
+
+int key_compare(void const *key, void const *obj) {
+    int k = *(int const *)key;
+    my_data_t const *d = obj;
+    return (k > d->key) - (k < d->key);
+}
+
+void delete_callback(void const *obj) {
+    // Optional cleanup - none needed here
+}
+
+void const * get_key(void const *obj) {
+    my_data_t const *d = obj;
+    return &d->key;
+}
+
+void walk_callback(void const *obj) {
+    my_data_t const *d = obj;
+    printf("Key: %d\n", d->key);
+}
+
+int main() {
+    size_t mindeg = 3;
+    b_tree_t *tree = b_tree_alloc();
+    b_tree_init(tree, mindeg, sizeof(my_data_t), object_compare, key_compare, delete_callback, get_key);
+
+    my_data_t d1 = {10};
+    my_data_t d2 = {20};
+    b_insert(tree, &d1);
+    b_insert(tree, &d2);
+
+    printf("Walk tree after insertions:\n");
+    b_walk(tree, walk_callback);
+
+    int key = 10;
+    my_data_t buffer = {0};
+    if (b_search(tree->root, &key, &buffer)) {
+        printf("Found key %d in tree.\n", buffer.key);
+    }
+
+    b_remove(tree, &key);
+    printf("Walk tree after deletion of key 10:\n");
+    b_walk(tree, walk_callback);
+
+    b_tree_term(tree);
+    b_tree_free(tree);
+
+    return 0;
+}
+```
+
+---
+
+## 4. Integration Tips & Best Practices
+
+- **Callback Implementation:**
+  - Ensure your comparison callbacks properly reflect the sorting logic for your object and keys.
+  - Your deletion callback should free or release any resources associated with stored objects.
+
+- **Shared Library Linking:**
+  - To avoid runtime linking errors, ensure `libbtree.so` is discoverable via `LD_LIBRARY_PATH` or installed into system library locations.
+  - Use compiler flags to explicitly specify library paths: `-L/path/to/lib -lbtree`.
+
+- **Thread Safety:**
+  - The current implementation itself does not provide built-in thread safety; ensure your own synchronization if accessing the tree concurrently.
+
+- **Memory Management:**
+  - Use `b_tree_alloc` and `b_tree_free` to manage the tree structure memory.
+  - Always pair `b_tree_init` with `b_tree_term` before freeing to avoid leaks.
+
+- **Error Handling:**
+  - Pay attention to return values (e.g., `b_search` returns NULL if key not found).
+  - Check parameters thoroughly before use.
+
+---
+
+## 5. Common Pitfalls & Troubleshooting
+
+<AccordionGroup title="Common Integration Challenges">
+<Accordion title="Shared Library Not Found at Runtime">
+Make sure your environment variable `LD_LIBRARY_PATH` includes the directory of `libbtree.so`. For example:
+
+```bash
+export LD_LIBRARY_PATH=../btree:$LD_LIBRARY_PATH
+```
+
+Alternatively, use `ldconfig` to register the library system-wide.
+</Accordion>
+<Accordion title="Compilation Errors for Missing Headers">
+Verify your compiler include path contains the directory holding `btree.h` and any utility headers. Use `-I` flags to add them, e.g.: `gcc -I../btree -I../util ...`
+</Accordion>
+<Accordion title="Incorrect Callback Behavior">
+Make sure your comparison and key retrieval callbacks match the data stored. Inconsistent callback logic can lead to incorrect tree behavior or data corruption.
+</Accordion>
+<Accordion title="Memory Leaks or Crashes on Termination">
+Always call `b_tree_term` before freeing the tree pointer to ensure all nodes and objects are properly released.
+</Accordion>
+</AccordionGroup>
+
+---
+
+## 6. Next Steps & Related Documentation
+
+- [Using the BTree C Interface](/guides/core-workflows/using-btree-c-interface) — Learn API usage in depth with demos.
+- [Compiling and Running the Demo](/guides/core-workflows/compiling-running-demo) — Follow build and demo workflows.
+- [Customizing Demo Parameters](/guides/core-workflows/customizing-demo-parameters) — Adjust demo behavior parameters.
+- [BTree Best Practices and Patterns](/guides/real-world-usage-optimization/btree-best-practices) — Advanced usage guidance.
+- [Troubleshooting Common Setup Issues](/getting-started/troubleshooting/troubleshooting-setup) — Resolving build and runtime problems.
+
+---
+
+## 7. Additional Resources
+
+- GitHub Repository: [https://github.com/KatoKode/BTree](https://github.com/KatoKode/BTree)
+- Reference on BTree Algorithms: [Delete Operation in B-Tree](https://www.geeksforgeeks.org/delete-operation-in-b-tree/?ref=lbp)
+
+---
+
+By following this guide, you confidently bring the high-performance BTree library into your projects, unlocking fast, flexible ordered data storage with an accessible C interface.
+
+
