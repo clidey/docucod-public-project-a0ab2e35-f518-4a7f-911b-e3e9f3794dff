@@ -3,4 +3,263 @@ title: "Compiling and Running the Demo"
 description: "Learn how to build the BTree library and demo application from scratch, including setup prerequisites and troubleshooting tips. This guide walks through compilation steps with provided shell scripts and Makefiles, and covers executing the demonstration program to verify correct installation."
 ---
 
-*This page will automatically be generated from the codebase*
+# Compiling and Running the Demo
+
+## Overview
+
+This guide walks you through building the BTree library and the accompanying demo application on a Linux system from scratch. You will learn how to set up the required prerequisites, use the provided shell scripts and Makefiles to compile the components in the correct order, and execute the demo program to verify your installation.
+
+## Prerequisites
+
+Before starting the compilation and execution process, ensure you have the following in place:
+
+- A Linux operating system running on an x86_64 architecture.
+- Development tools: `NASM` (Netwide Assembler), `GCC` compiler, and `make` utility installed and accessible from your command line.
+- A working command line shell (`bash` or compatible).
+- Familiarity with running shell scripts and basic terminal navigation.
+
+## Expected Outcome
+
+By completing this guide, you will have:
+
+- Successfully built the BTree utility, core library, and demo executable.
+- Executed the demo application to test the BTree implementation.
+- Generated demo output logs to inspect the BTree operations and verify correctness.
+
+## Estimated Time
+
+Completing the build and running the demo should take approximately 5–10 minutes, depending on your system and familiarity with command line operations.
+
+---
+
+## Step-by-Step Instructions
+
+<Steps>
+<Step title="Step 1: Navigate to the Base Directory">
+Open your terminal and navigate to the root folder of the BTree project, typically named `BTree-main`. This is the location where the build script `btree_make.sh` resides.
+
+```bash
+cd path/to/BTree-main
+```
+
+Confirm you are in the correct directory by listing the files:
+
+```bash
+ls -l btree_make.sh
+```
+
+You should see the script listed.
+</Step>
+
+<Step title="Step 2: Run the Build Script">
+Execute the build script `btree_make.sh` which automates the compilation of the utility, BTree library, and the demo application.
+
+```bash
+sh ./btree_make.sh
+```
+
+- This script compiles:
+  - **Utility library** located in `./util/`
+  - **BTree library** located in `./btree/`
+  - **Demo executable** located in `./btest/`
+
+- It performs `make clean` before building each component to ensure a fresh build.
+- It verifies the existence of critical files after each build step.
+- It sets executable permissions on the demo run script.
+
+Expected output includes separator lines and status messages confirming each successful build stage followed by "alls well that ends well." at the end.
+
+If the script exits with an error, review the output for error messages or missing dependencies.
+</Step>
+
+<Step title="Step 3: Run the Demo Application">
+Once the build completes successfully, enter the demo execution folder:
+
+```bash
+cd btest
+```
+
+Execute the provided demo script to start the demonstration:
+
+```bash
+./go_btest.sh
+```
+
+- This script runs the demo executable `./btest` with a randomly generated 8-digit seed number.
+- The demo output is redirected to `./out.txt`.
+- After execution, you will be asked whether to view the output file. Type `Y` or press Enter to view.
+
+This demo program inserts randomly generated data into the BTree, walks the tree to display contents, optionally deletes entries based on configuration, and verifies the tree's state.
+</Step>
+
+<Step title="Step 4: Review the Demo Output">
+If you chose to view the output file, you will see detailed logs of the BTree operations:
+
+- Insertions of randomly generated floating-point numbers.
+- Entries shown during tree walks.
+- Callback function printouts demonstrating comparisons and traversals.
+
+Use this output to confirm the demo ran correctly and the BTree implementation behaves as expected.
+
+If you notice any errors or unexpected behavior, verify:
+
+- Your build steps completed without error.
+- The system environment meets the prerequisites.
+- Demo parameters in `btest/main.h` are set correctly (see next section).
+</Step>
+</Steps>
+
+---
+
+## Customizing Demo Parameters
+
+For advanced users wanting to adjust the demo behavior, you can modify these constants in the header file `btest/main.h`:
+
+```c
+#define DATA_COUNT    128   // Number of data items to insert
+#define DELETE_COUNT   0    // Number of data items to delete after insertion
+```
+
+- Increasing `DATA_COUNT` raises the volume of inserted data.
+- Setting `DELETE_COUNT` to a value up to `DATA_COUNT` will delete that many entries from the tree after insertion and traversal.
+
+> **Important:** The demo does not check for negative values or that `DELETE_COUNT` does not exceed `DATA_COUNT`. Use caution when tuning these parameters.
+
+---
+
+## Troubleshooting Common Issues
+
+<AccordionGroup title="Build and Compilation Issues">
+  <Accordion title="Build Script Exits with an Error">
+If `btree_make.sh` exits prematurely:
+- Confirm all prerequisites (`NASM`, `GCC`, `make`) are installed and accessible.
+- Check you have permission to execute scripts and write file outputs.
+- Review build outputs for missing files or permission denied errors.
+  </Accordion>
+  <Accordion title="Shared Libraries Not Found at Runtime">
+Ensure your `LD_LIBRARY_PATH` includes the `./btree/` and `./util/` directories or install the shared libraries system-wide.
+
+Example:
+
+```bash
+export LD_LIBRARY_PATH=$(pwd)/btree:$(pwd)/util:$LD_LIBRARY_PATH
+```
+
+Run this in your shell before executing the demo.
+  </Accordion>
+</AccordionGroup>
+
+<AccordionGroup title="Demo Runtime Issues">
+  <Accordion title="Demo Program Exits or Shows Usage Message">
+Verify you are running the demo script `go_btest.sh` from the `btest/` directory.
+
+The script automatically passes a random number argument to the demo executable, which is mandatory.
+  </Accordion>
+  <Accordion title="Output File is Empty or Missing">
+Confirm the demo executable `btest` ran correctly and that your shell supports redirection.
+Check file permissions on `./out.txt` and your disk space.
+  </Accordion>
+  <Accordion title="Unexpected Demo Behavior or Errors in Output">
+Check modifications in `main.h` for parameter validity.
+Rebuild the project with `btree_make.sh` to ensure all components are synchronized.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Additional Tips & Best Practices
+
+- Use the build and run scripts as provided to ensure the correct build order and environment.
+- Avoid editing assembly files unless you are confident, as this is a low-level implementation.
+- Reference callback function outputs in `main.c` and header comments to deepen your understanding of the behavior.
+- For repeated demo runs, you can edit `go_btest.sh` to pass a fixed seed value or to disable paging of output if desired.
+
+---
+
+## Example: Manually Building Components
+
+If you prefer to build step-by-step manually, here is the sequence to compile and link each component:
+
+```bash
+# Step 1: Build utility library
+cd util
+make clean
+make
+
+# Step 2: Build BTree library
+cd ../btree
+make clean
+make
+
+# Step 3: Build demo program
+cd ../btest
+make clean
+make
+
+# Step 4: Make demo script executable
+chmod 744 ./go_btest.sh
+
+# Step 5: Run the demo
+./go_btest.sh
+```
+
+This manual build reflects what `btree_make.sh` automates.
+
+---
+
+## Diagram: Build and Run Workflow
+
+```mermaid
+flowchart TD
+    A[Start at BTree-main Directory] --> B[Run btree_make.sh]
+    B --> C{Compilation Steps}
+    C --> C1[Build Utility Library (./util/)]
+    C --> C2[Build BTree Library (./btree/)]
+    C --> C3[Build Demo Executable (./btest/)]
+    C1 --> C2
+    C2 --> C3
+    C3 --> D[Set Demo Script Executable]
+    D --> E[Change Directory to btest]
+    E --> F[Run ./go_btest.sh Script]
+    F --> G[Demo Execution with Random Seed]
+    G --> H[Output to out.txt]
+    H --> I[Prompt to View Output]
+    I -->|Yes| J[Open out.txt with less]
+    I -->|No| K[Exit]
+```
+
+---
+
+## Next Steps & Related Content
+
+- **Customizing Demo Parameters**: Learn how to tweak the demo to test different scenarios by modifying `DATA_COUNT` and `DELETE_COUNT` in `btest/main.h`. See [Customizing Demo Parameters Guide](../core-workflows/customizing-demo-parameters).
+
+- **Using the BTree C Interface**: Understand how to interface your C projects with the BTree shared library for custom applications. See [Using the BTree C Interface Guide](../core-workflows/using-btree-c-interface).
+
+- **Troubleshooting Setup Issues**: For advanced debugging during installation or unexpected runtime behavior, refer to [Troubleshooting Common Setup Issues](../../troubleshooting/troubleshooting-setup).
+
+- **System Requirements**: Confirm your environment matches prerequisites by reviewing [System Requirements](../../requirements-installation/system-prerequisites).
+
+
+---
+
+<Tip>
+Always run the provided shell scripts and makefiles as they handle dependencies and build order correctly, minimizing common errors during compilation.
+</Tip>
+
+<Note>
+Viewing the demo output through the `less` pager allows for convenient scrolling. You can exit this view anytime by pressing `q`.
+</Note>
+
+<Warning>
+Do not manually edit assembly files unless you are experienced with x86_64 assembly programming; unintended changes can break the build or functionality.
+</Warning>
+
+---
+
+For the full source code, build scripts, and demo files, visit the GitHub repository:
+
+[https://github.com/KatoKode/BTree](https://github.com/KatoKode/BTree)
+
+
+---
