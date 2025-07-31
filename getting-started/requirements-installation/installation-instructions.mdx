@@ -3,4 +3,194 @@ title: "Installation Instructions"
 description: "Step-by-step guide to building the BTree shared library and the demo program using provided scripts. Covers executing `btree_make.sh` and the necessary makefiles, mapping each instruction to its effect in the codebase."
 ---
 
-*This page will automatically be generated from the codebase*
+# Installation Instructions for Building the BTree Shared Library and Demo
+
+Welcome to the installation guide for the BTree project. This page provides a practical, step-by-step walkthrough to build the BTree shared library and compile its demo program using the provided scripts and makefiles. By following these instructions, you will have a working library and demo to test on your Linux system.
+
+---
+
+## 1. Prerequisites
+
+Before starting the installation, ensure your system meets these requirements:
+
+- **Operating System:** Linux OS (x86_64 architecture)
+- **Tools Installed:**
+  - NASM assembler (Netwide Assembler)
+  - GCC compiler
+  - `make` utility
+- **Access:** Command line access with permissions to build and execute scripts
+
+If any tools are missing, install them first via your Linux distribution's package manager, e.g., `sudo apt install nasm gcc make` on Debian-based systems.
+
+---
+
+## 2. Overview of Build Components
+
+The BTree project includes three main components that need to be built in the following order:
+
+1. **Utility Library (`libutil.so`)** - Provides support routines.
+2. **BTree Shared Library (`libbtree.so`)** - The core BTree code, combining assembly and C implementations.
+3. **Demo Program (`btest`)** - A C program that exercises the BTree library.
+
+The provided shell script `btree_make.sh` automates building all these components in sequence through their respective makefiles.
+
+---
+
+## 3. Step-by-Step Installation
+
+### Step 1: Download and Prepare the Project
+
+- Open a terminal and navigate to the root directory of the BTree project (usually named `BTree-main`).
+- Make sure the script `btree_make.sh` and the subfolders `util/`, `btree/`, and `btest/` are present.
+
+### Step 2: Run the Build Script
+
+Execute the build script to compile all components:
+
+```bash
+sh ./btree_make.sh
+```
+
+**What happens in this script:**
+
+- Clears the terminal.
+- Changes directory to `util/`, cleans, and rebuilds the utilities library.
+- Verifies `libutil.so` exists.
+- Changes directory to `btree/`, cleans, and rebuilds the BTree shared library.
+- Confirms `libbtree.so` was created.
+- Changes directory to `btest/`, cleans and compiles the demo program.
+- Sets execution permissions for the demo runner script.
+- Prints a success message: “alls well that ends well.”
+
+### Step 3: Verify Successful Build
+
+If the build completes without errors, the following files should be present:
+
+- `util/libutil.so`
+- `btree/libbtree.so`
+- `btest/btest` executable
+
+If any step fails, review the error messages (common issues are missing dependencies or permissions).
+
+<Note>
+If the build halts unexpectedly, ensure NASM, GCC, and make are installed and in your system PATH. Also check you have execute permissions for the script.
+</Note>
+
+---
+
+## 4. Understanding the Makefiles
+
+Each component has its own makefile:
+
+### a) Util Makefile (`util/makefile` - referenced but not detailed here)
+- Builds the utility shared library `libutil.so`.
+
+### b) BTree Makefile (`btree/makefile`):
+
+Key rules:
+
+- **`libbtree.so`** depends on `btree_asm.o` and `btree.o`.
+- **`btree_asm.o`** compiled from `btree.asm` using NASM with ELF64 format.
+- **`btree.o`** compiled from `btree.c` with GCC as position-independent code (`-fPIC`).
+
+The final shared library is linked with `-shared` and security option `-z noexecstack` to prevent executable stack.
+
+### c) Demo Makefile (`btest/makefile`):
+
+Key rules:
+
+- Compiles `main.c` into `main.o` with pthread support.
+- Links `main.o` with `libbtree.so` and `libutil.so` to create the `btest` executable.
+
+---
+
+## 5. Running the Demo Program
+
+After successful build, proceed as follows:
+
+1. Navigate to the `btest/` directory:
+   ```bash
+   cd btest
+   ```
+
+2. Run the provided launcher script:
+   ```bash
+   ./go_btest.sh
+   ```
+
+3. The demo will execute with a randomly generated seed, running insertions and optional deletions (controlled by demo parameters).
+
+4. Demo output is saved to `out.txt`. You will be prompted to view it using a pager:
+
+    - Type `Y` or press Enter to view.
+    - Type `N` to exit.
+
+<Check>
+If you make changes to demo parameters (see the `Configuring the Demo Program` page), rerun the build script before executing the demo.
+</Check>
+
+---
+
+## 6. Customizing Build or Debugging
+
+- **Modifying Demo Behavior:** Edit defines in `btest/main.h`:
+  - `DATA_COUNT` controls number of insertions
+  - `DELETE_COUNT` controls number of deletions
+
+  After changes, rerun `sh ../btree_make.sh` from the `BTree-main` root or execute the build script again.
+
+- **Verbose Compilation:** You can manually run make commands to inspect output:
+
+```bash
+cd util && make clean && make
+cd ../btree && make clean && make
+cd ../btest && make clean && make
+```
+
+- **Troubleshooting:** If compilation fails:
+  - Verify tools installed and on your PATH.
+  - Confirm correct NASM version (supporting ELF64).
+  - Check for file permission issues.
+  - Review error output for missing headers or libraries.
+
+---
+
+## 7. Summary
+
+By following this guide, you have:
+
+- Built the utility and BTree shared libraries
+- Compiled the demo program linked against these libraries
+- Learned how to run the demo and inspect its output
+- Understood how the build process maps to source components
+
+Next, explore the [Configuring the Demo Program](/getting-started/configuration-first-run/demo-configuration) page to tailor the demo to your needs.
+
+---
+
+## References and Links
+
+- [BTree Project GitHub Repository](https://github.com/KatoKode/BTree)
+- Relevant documentation:
+  - [System Requirements](../requirements-installation/system-prerequisites)
+  - [Running the Demo](../configuration-first-run/running-the-demo)
+  - [Compiling and Running the Demo](../../guides/core-workflows/compiling-running-demo)
+
+---
+
+### Full Command Summary
+
+```bash
+cd BTree-main
+sh ./btree_make.sh   # Build all components
+cd btest
+./go_btest.sh        # Run the demo program
+```
+
+<Tip>
+Keep your environment clean by running `make clean` in each directory if you want to rebuild from scratch.
+</Tip>
+
+---
+
+Enjoy exploring the high-performance BTree implementation!
