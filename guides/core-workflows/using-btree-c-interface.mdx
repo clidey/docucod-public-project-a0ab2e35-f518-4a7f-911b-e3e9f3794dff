@@ -3,4 +3,236 @@ title: "Using the BTree C Interface"
 description: "A practical exploration of how to integrate and interact with the BTree library from C code. Covers initializing a tree, inserting and deleting data, traversing, and accessing BTree operations through the defined interface. Includes key code examples from the demo app and implementation points."
 ---
 
-*This page will automatically be generated from the codebase*
+# Using the BTree C Interface
+
+## Overview
+This guide provides a clear, practical roadmap for Linux developers to integrate and interact with the BTree library from C code. It covers initializing the BTree data structure, inserting and deleting data entries, traversing the entire tree, and performing searches using the defined C interface. Real-world examples, drawn from the included demo program, illustrate each primary operation to help you quickly master usage and unlock the performance benefits of this x86_64 Assembly-backed BTree implementation.
+
+---
+
+## Prerequisites
+- Familiarity with C programming on Linux.
+- A working build of the BTree shared library (`libbtree.so`).
+- Headers (`btree.h`) and utility libraries included alongside BTree source.
+- Basic understanding of BTree concepts (see [Core Concepts & Terminology](/overview/intro-value/terminology)).
+
+---
+
+## Expected Outcome
+By following this guide, you will:
+- Initialize and configure a BTree structure tailored for your data type.
+- Insert elements into the BTree efficiently.
+- Search, delete, and traverse data entries with callback functions.
+- Manage the BTree lifecycle including proper cleanup.
+
+This empowers you to embed and operate on performant multiway trees in your C/Linux projects.
+
+---
+
+## Time Estimate
+Approximately 30-45 minutes to read, understand, and apply this interface documentation.
+
+---
+
+# Step-by-Step: Using the BTree C Interface
+
+## 1. Initialize Your BTree Instance
+You start by allocating a `b_tree_t` struct and initializing it with critical parameters:
+
+- `mindeg`: The minimum degree of the tree, controls node size and balancing.
+- `o_size`: The size in bytes of each object stored (your data struct size).
+- Function pointers for:
+  - Object comparison (`o_cmp_cb`) - compares two stored objects.
+  - Key comparison (`k_cmp_cb`) - compares a key against an object.
+  - Object deletion (`o_del_cb`) - cleanup callback called before removing an entry.
+  - Key getter (`k_get_cb`) - extracts key from stored object.
+
+Example from demo program:
+
+```c
+b_tree_t *tree = b_tree_alloc();
+size_t mindeg = 15;
+size_t o_size = sizeof(data_t);
+b_tree_init(tree, mindeg, o_size, o_cmp_cb, k_cmp_cb, o_del_cb, k_get_cb);
+```
+
+> **Tip:** Choose `mindeg` based on your performance and memory trade-offs. Larger values reduce tree height but increase node size.
+
+---
+
+## 2. Insert Objects into the BTree
+Use `b_insert` to add new objects. The BTree internally splits nodes when full, keeping your tree balanced.
+
+```c
+b_insert(tree, &new_object);
+```
+
+The demo program inserts randomly generated data wrapped in a `data_t` structure that includes a double key and an associated string.
+
+---
+
+## 3. Searching for Entries
+To find an object by key, use `b_search`. Provide the root node, the search key, and a buffer where the result will be copied if found.
+
+```c
+data_t result;
+void *found = b_search(tree->root, &search_key, &result);
+if (found != NULL) {
+  // Successful find; result contains found object data
+}
+```
+
+The search is recursive and leverages your key comparison callback to locate the target efficiently.
+
+---
+
+## 4. Deleting Entries
+Delete entries by key using `b_remove`. It handles tree rebalancing and cleanup.
+
+```c
+b_remove(tree, &key_to_delete);
+```
+
+Before deletion, your deletion callback function `o_del_cb` is called for resource management. The demo shows how to delete multiple entries and safely search afterward to confirm removal.
+
+> **Warning:** The BTree library expects keys and objects to be consistent with your callbacks for correctness.
+
+---
+
+## 5. Traversing the Tree
+Use `b_walk` to traverse all objects in ascending order. Supply a callback that processes each object.
+
+```c
+void walk_cb(void const *obj) {
+  // Process object
+}
+
+b_walk(tree, walk_cb);
+```
+
+In the demo, the callback prints objects with an index count and yields CPU periodically to maintain responsiveness.
+
+---
+
+## 6. Terminating the Tree
+When done with the BTree, call `b_tree_term` to release all node memory and invoke cleanup callbacks on stored objects, followed by freeing the tree itself.
+
+```c
+b_tree_term(tree);
+b_tree_free(tree);
+```
+
+This ensures proper resource management and prevents memory leaks.
+
+---
+
+# Example: Putting It All Together (Extract from Demo)
+
+```c
+// Initialization
+b_tree_t *tree = b_tree_alloc();
+b_tree_init(tree, MINIMUM_DEGREE, sizeof(data_t), o_cmp_cb, k_cmp_cb, o_del_cb, k_get_cb);
+
+// Insert random data
+for (size_t i = 0; i < DATA_COUNT; ++i) {
+    data_t d = generate_random_data();
+    b_insert(tree, &d);
+}
+
+// Walk the tree
+b_walk(tree, walk_cb);
+
+// Delete some entries
+for (size_t i = 0; i < DELETE_COUNT; ++i) {
+    b_remove(tree, &delete_key[i]);
+}
+
+// Terminate
+b_tree_term(tree);
+b_tree_free(tree);
+```
+
+# Callbacks Example Snippet
+
+```c
+int o_cmp_cb(const void *a, const void *b) {
+  const data_t *d1 = a;
+  const data_t *d2 = b;
+  return (d1->d > d2->d) ? 1 : (d1->d < d2->d) ? -1 : 0;
+}
+
+int k_cmp_cb(const void *key, const void *obj) {
+  double k = *(const double *)key;
+  const data_t *d = obj;
+  return (k > d->d) ? 1 : (k < d->d) ? -1 : 0;
+}
+
+const void * k_get_cb(const void *obj) {
+  return &((const data_t *)obj)->d;
+}
+
+void o_del_cb(const void *obj) {
+  // Cleanup or logging logic prior to deletion
+}
+
+void walk_cb(const void *obj) {
+  // Called for every object during traversal
+}
+```
+
+---
+
+# Best Practices & Tips
+- Always implement consistent and efficient callbacks.
+- Before inserting objects, ensure they are unique by searching first.
+- Handle threading carefully; BTree operations are not internally synchronized.
+- Use the provided demo (`btest`) as a reference to accelerate development.
+
+---
+
+# Troubleshooting Common Issues
+
+| Symptom                        | Cause & Solution                                   |
+|-------------------------------|---------------------------------------------------|
+| Demo build fails               | Check system prerequisites and ensure NASM, GCC, and make are installed (see [System Requirements](/getting-started/requirements-installation/system-prerequisites)).|
+| Insertion fails or corrupts data | Verify callback implementations match object layout and key extraction. |
+| Search returns NULL unexpectedly | Confirm objects were inserted and key matches data format exactly. |
+| Memory leaks on termination   | Ensure all deletion callbacks clean resources properly. Use `b_tree_term` before freeing the tree. |
+
+---
+
+# Next Steps & Related Content
+- [Core Concepts & Terminology](/overview/intro-value/terminology) to deepen understanding of BTree principles.
+- [Building & Running the Demo](/overview/architecture-quickstart/quickstart-demo) for environment setup and hands-on trials.
+- [Integrating BTree into Your Project](/guides/real-world-usage-optimization/integrating-btree-into-your-project) to embed BTree in production software.
+- [BTree Best Practices and Patterns](/guides/real-world-usage-optimization/btree-best-practices) to optimize use.
+
+---
+
+# Summary
+This guide illuminates the essential C interface to the BTree library, enabling developers to initialize, manipulate, query, traverse, and safely terminate BTree data structures. By leveraging callbacks for comparison, key extraction, and deletion, you gain flexibility to store any data type efficiently inside a performant assembly-implemented BTree.
+
+Start by allocating and initializing your BTree with configuration and callbacks, insert unique data objects, search and remove entries by key, traverse all entries with a processing callback, and finally free resources to prevent leaks. The included demo code exemplifies these workflows and provides a solid foundation for your application.
+
+---
+
+For full source and examples, see the [BTree GitHub Repository](https://github.com/KatoKode/BTree).
+
+
+---
+
+## References
+- [BTree Header: `btree.h`](https://github.com/KatoKode/BTree/blob/main/btree/btree.h)
+- [Demo Source: `main.c`](https://github.com/KatoKode/BTree/blob/main/btest/main.c)
+- [Assembly Implementation: `btree.asm`](https://github.com/KatoKode/BTree/blob/main/btree/btree.asm)
+- [Core Concepts & Terminology](/overview/intro-value/terminology)
+- [Building & Running the Demo](/overview/architecture-quickstart/quickstart-demo)
+
+---
+
+## Additional Notes
+- The BTree library is implemented in highly optimized x86_64 Assembly, making its C interface your direct route for invocation.
+- The demo program (`btest`) shows complete, practical use including setup, insertion, deletion, traversal, and termination.
+- Use the debug prints in callbacks (like `o_cmp_cb`) to better understand tree operations during development.
+
+---
