@@ -3,4 +3,207 @@ title: "Troubleshooting Common Setup Issues"
 description: "Covers typical installation and run problems (such as missing dependencies, compile errors, or unexpected output), with quick solutions mapped to relevant scripts and configuration files. Also notes demo’s printf messages and how to disable them if needed."
 ---
 
-*This page will automatically be generated from the codebase*
+# Troubleshooting Common Setup Issues
+
+This page addresses typical problems you may encounter when installing, compiling, and running the BTree project demo. It provides practical solutions linked to relevant scripts and configuration files. Additionally, it explains the origin of demo program `printf` messages and how to disable them to keep output clean.
+
+---
+
+## 1. Common Installation & Build Problems
+
+### Issue: `btree_make.sh` script fails or exits early
+
+**Symptoms:**
+- Build halts with error messages.
+- Missing `libutil.so`, `libbtree.so`, or `btest` executables after running the script.
+
+**Cause & Solution:**
+1. Ensure you are running the `btree_make.sh` script from the root `BTree-main` directory.
+2. Confirm you have all required tools installed:
+   - NASM assembler
+   - GCC compiler
+   - `make` utility
+3. Check permissions of `btree_make.sh` and makefiles; make them executable if needed:
+   ```bash
+   chmod +x btree_make.sh
+   chmod +x btest/go_btest.sh
+   ```
+4. Run the script again:
+   ```bash
+   sh ./btree_make.sh
+   ```
+5. If any step fails, inspect the output in the corresponding directory (`util/`, `btree/`, or `btest/`) and run `make` manually:
+   ```bash
+   cd util && make clean && make
+   cd ../btree && make clean && make
+   cd ../btest && make clean && make
+   ```
+
+<Tip>
+Often missing dependencies or environment path issues cause build failures. Verify your Linux development environment corresponds with the System Requirements documentation.
+</Tip>
+
+
+### Issue: Compilation errors related to missing headers or libraries
+
+**Symptoms:** Errors like `btree.h` not found or linking errors.
+
+**Cause & Solution:**
+- Verify the directory structure is intact and headers such as `btree/btree.h`, `util/util.h` exist.
+- Make sure relative include paths in source files are correct, consistent with the source tree.
+- Check that `libutil.so` and `libbtree.so` were built successfully before compiling `btest`.
+- Re-run build steps in order: `util` → `btree` → `btest`.
+
+
+## 2. Running the Demo: Common Issues and Solutions
+
+### Issue: Running `./go_btest.sh` fails or produces no output
+
+**Symptoms:**
+- Script terminates early or with errors.
+- Output file `out.txt` is empty or missing.
+
+**Cause & Solution:**
+1. Ensure the demo program `btest` exists and is executable inside the `btest` directory:
+   ```bash
+   ls -l btest
+   ```
+2. Confirm you have execute permission on `btest` and `go_btest.sh`:
+   ```bash
+   chmod +x btest go_btest.sh
+   ```
+3. Run the script explicitly:
+   ```bash
+   ./go_btest.sh
+   ```
+4. If it still fails, try running `./btest` directly with a random number argument:
+   ```bash
+   ./btest 12345678
+   ```
+5. Check for error messages, missing dependencies, or library linking issues.
+
+
+### Issue: Unexpected or overly verbose printf output during demo runs
+
+The demo program uses `printf` calls embedded in the Assembly source for illustrative purposes and debugging.
+
+**Key points:**
+- These calls are marked within `btree.asm` file between comment lines:
+  ```asm
+  ; BEGIN PRINTF
+  ...
+  ; END PRINTF
+  ```
+- The corresponding format strings are defined in the `.data` section of the same file.
+
+**How to disable printf messages:**
+- Open the `btree.asm` file and locate the `BEGIN PRINTF` and `END PRINTF` marked blocks.
+- Comment out or remove these sections to suppress the print output.
+- Rebuild the `btree` shared library by running:
+  ```bash
+  cd btree
+  make clean
+  make
+  ```
+- Then rerun the demo.
+
+<Tip>
+Suppressing printf calls reduces demo output clutter, helping focus on functionality verification.
+</Tip>
+
+
+## 3. Configuration Pitfalls
+
+### Issue: Modifying demo parameters causes undefined behavior
+
+**Context:** The demo uses two major parameters in `btest/main.h`:
+```c
+#define DATA_COUNT    128
+#define DELETE_COUNT  0
+```
+
+**Tips:**
+- `DATA_COUNT` sets how many random data items the demo inserts into the BTree.
+- `DELETE_COUNT` defines how many of those inserted items will be deleted during the demo.
+- Do NOT set `DELETE_COUNT` larger than `DATA_COUNT` or to negative values — the demo does not validate this and may crash or behave unexpectedly.
+
+**Recommended workflow:**
+- Make modifications only after successful demo builds and runs.
+- Increment values gradually and verify each run.
+
+
+## 4. Troubleshooting Tips & Quick Checks
+
+### Verifying the Build Artifacts
+
+After running `btree_make.sh`, verify presence of:
+- `util/libutil.so`
+- `btree/libbtree.so`
+- `btest/btest` executable
+
+Use:
+```bash
+ls -l util/libutil.so
+ls -l btree/libbtree.so
+ls -l btest/btest
+```
+
+### Checking Demo Output
+
+Run the demo with:
+```bash
+cd btest
+./go_btest.sh
+```
+- Confirm `out.txt` is created with output logs.
+- Look for lines indicating tree insertions, deletions, and walking.
+
+### Handling Errors in Run Output
+
+- If errors like `usage: ./btest [random number]` appear, make sure to provide the required argument when running `./btest` directly.
+- Confirm the random seed argument is valid and numeric.
+
+
+## 5. References to Relevant Files & Scripts
+
+| File / Script        | Purpose                                                  |
+|---------------------|----------------------------------------------------------|
+| `btree_make.sh`      | All-in-one build script running make in all subprojects. |
+| `btest/go_btest.sh`  | Runs demo program with random seed, saves output.        |
+| `btree.asm`          | Assembly source with embedded `printf` debug output.     |
+| `btest/main.h`       | Demo program configuration parameters (DATA_COUNT, DELETE_COUNT). |
+| `btest/makefile`     | Building the demo executable.                             |
+
+
+---
+
+## Summary
+
+This troubleshooting guide equips you to resolve the most frequent problems during setup, build, and demo runs of the BTree project. It clarifies error causes, practical fixes, and how to manage the demo's diagnostic printf messages embedded in assembly source. Following these steps assures smooth installation and clean demonstration of the BTree functionality.
+
+---
+
+## See Also
+
+- [Installation Instructions](/getting-started/requirements-installation/installation-instructions)
+- [System Requirements](/getting-started/requirements-installation/system-prerequisites)
+- [Running the Demo](/getting-started/configuration-first-run/running-the-demo)
+- [Configuring the Demo Program](/getting-started/configuration-first-run/demo-configuration)
+- [Compiling and Running the Demo](/guides/core-workflows/compiling-running-demo)
+
+---
+
+## Getting Further Help
+
+If you encounter unresolved issues:
+- Verify your system meets all prerequisites.
+- Check environment variables affecting library loading paths.
+- Consult the README.md file in the project root.
+- Visit the [BTree GitHub repository](https://github.com/KatoKode/BTree) to file issues or search existing discussions.
+
+
+---
+
+<Check>
+By following these troubleshooting steps, users will confidently resolve build and run issues, tailor demo outputs, and validate their BTree setup effectively.
+</Check>
