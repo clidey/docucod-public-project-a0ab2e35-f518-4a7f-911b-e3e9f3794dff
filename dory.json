@@ -1,0 +1,101 @@
+{
+  "background": {
+    "decoration": "gradient"
+  },
+  "colors": {
+    "dark": "#1E3A8A",
+    "light": "#60A5FA",
+    "primary": "#60A5FA"
+  },
+  "favicon": "/favicon.svg",
+  "fonts": {
+    "family": "Montserrat",
+    "format": "woff2",
+    "source": "https://fonts.gstatic.com/s/googlesansflex/v5/t5sJIQcYNIWbFgDgAAzZ34auoVyXkJCOvp3SFWJbN5hF8Ju1x6sKCyp0l9sI40swNJwGpVd4AZzz0v6lJ4qFXNZhGjLvDSkV4USKMo6qQzwliVdHAy9jxTDHg_ugnAakpwGc-cxgUqDCIUI.woff2"
+  },
+  "icons": {
+    "library": "fontawesome"
+  },
+  "logo": {
+    "dark": "./logo/logo.svg",
+    "light": "./logo/logo.svg"
+  },
+  "name": "Just Another Armchair Programmer - BTree Implementation",
+  "navigation": {
+    "tabs": [
+      {
+        "groups": [
+          {
+            "group": "Product Introduction \u0026 Core Concepts",
+            "pages": [
+              "overview/intro-value/product-summary",
+              "overview/intro-value/core-features",
+              "overview/intro-value/terminology",
+              "overview/intro-value/audience-usecases"
+            ]
+          },
+          {
+            "group": "Architecture \u0026 Getting Started",
+            "pages": [
+              "overview/architecture-quickstart/system-architecture",
+              "overview/architecture-quickstart/quickstart-demo",
+              "overview/architecture-quickstart/integration-points"
+            ]
+          }
+        ],
+        "tab": "Overview"
+      },
+      {
+        "groups": [
+          {
+            "group": "Prerequisites \u0026 Installation",
+            "pages": [
+              "getting-started/requirements-installation/system-prerequisites",
+              "getting-started/requirements-installation/installation-instructions"
+            ]
+          },
+          {
+            "group": "Configuration \u0026 First Run",
+            "pages": [
+              "getting-started/configuration-first-run/demo-configuration",
+              "getting-started/configuration-first-run/running-the-demo",
+              "getting-started/configuration-first-run/quick-validation"
+            ]
+          },
+          {
+            "group": "Troubleshooting \u0026 Tips",
+            "pages": [
+              "getting-started/troubleshooting/troubleshooting-setup"
+            ]
+          }
+        ],
+        "tab": "Getting Started"
+      },
+      {
+        "groups": [
+          {
+            "group": "Getting Started \u0026 Core Workflows",
+            "pages": [
+              "guides/core-workflows/compiling-running-demo",
+              "guides/core-workflows/using-btree-c-interface",
+              "guides/core-workflows/customizing-demo-parameters"
+            ]
+          },
+          {
+            "group": "Real-World Usage \u0026 Optimization",
+            "pages": [
+              "guides/real-world-usage-optimization/integrating-btree-into-your-project",
+              "guides/real-world-usage-optimization/btree-best-practices",
+              "guides/real-world-usage-optimization/debugging-and-optimizing-performance"
+            ]
+          }
+        ],
+        "tab": "Guides"
+      }
+    ]
+  },
+  "styling": {
+    "codeblocks": "dark",
+    "eyebrows": "breadcrumbs"
+  }
+}
